@@ -13,6 +13,8 @@ tf.flags.DEFINE_string('logdir', None, 'Log directory')
 tf.flags.DEFINE_integer("batch_size", 32, "Batch size")
 tf.flags.DEFINE_float("learning_rate", .005, "Learning rate")
 tf.flags.DEFINE_string("dataset", 'dataset_voc2012', "Dataset to use")
+tf.flags.DEFINE_string('image', None, 'Image with watermark')
+tf.flags.DEFINE_string('selection', None, 'Where to do the removal')
 
 FLAGS = tf.flags.FLAGS
 dataset.FLAGS = FLAGS
@@ -262,7 +264,17 @@ def show_images(images):
 
 def main(_):
     with tf.Session() as sess:
-        train(sess, globals()[FLAGS.dataset])
+        if FLAGS.image and FLAGS.selection:
+            images = inference(
+                sess,
+                lambda: dataset_paths([FLAGS.image]),
+                0,
+                lambda: dataset_paths(['assets/empty.png']),
+                lambda: dataset_paths([FLAGS.selection]))
+            image = np.squeeze(images[1])
+            PIL.Image.fromarray(image).save('output.png')
+        else:
+            train(sess, globals()[FLAGS.dataset])
     return
 
 

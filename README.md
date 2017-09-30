@@ -1,12 +1,14 @@
-# Fully convulutional watermark removal attack
+# Fully convolutional watermark removal attack
 
 Deep learning architecture to remove transparent overlays from images.
 
-![example](example.png)
+![example](assets/example.png)
 
-Top: left is with watermark, middle is reconstruction and right is the mask the algo predicts (the neural net was never trained using text or this image)
+***Top:** left is with watermark, middle is reconstruction and right is the mask the algo predicts (the neural net was never trained using text or this image)*
 
-Bottom: Pascal dataset image reconstructions. When the watermarked area is saturated, the reconstruction tends to produce a gray color.
+***Bottom:** Pascal dataset image reconstructions. When the watermarked area is saturated, the reconstruction tends to produce a gray color.*
+
+## Design choices
 
 At train time, I generate a mask. It is a rectangle with randomly generated parameters (height, width, opacity, black/white, rotation). The mask is applied to a picture and the network is trained to find what was added. The loss is abs(prediction, image_perturbations)**1/2. The loss is not on the entire picture. An area around the mask is used to make the problem more tractable.
 
@@ -21,4 +23,4 @@ You will also need to download the pascal dataset from http://host.robots.ox.ac.
 
 To train the network `python3 watermarks.py --logdir=save/`. It starts to produce some interesting results after 12000 steps.
 
-To use the network for inference, you can run `inference` and `show_images` in Jupyter.
+To use the network for inference, you can run `python watermarks.py --image assets/cat.png --selection assets/cat-selection.png` this will create a new image `output.png`.
