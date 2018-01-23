@@ -192,7 +192,9 @@ def train(sess, dataset, min_opacity=.15, max_opacity=.4):
 
     # Define loss
     image_mask = -(image_w - next_image)  # Mask after application on the image
-    tf.losses.absolute_difference(predictions, image_mask)**.5
+    abs_loss = tf.losses.absolute_difference(
+        predictions, image_mask, loss_collection=None)**.5
+    tf.losses.add_loss(abs_loss)
     loss = tf.losses.get_total_loss(True)
     tf.summary.scalar('loss', loss)
 
