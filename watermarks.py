@@ -1,18 +1,18 @@
-from time import time
+from dataset import batch_masks, unstandardize, dataset_paths, dataset_voc2012, dataset_split, dataset_voc2012_rec  # noqa
 from io import BytesIO
+from time import time
 import IPython.display
 import PIL.Image
-import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
-from dataset import batch_masks, unstandardize, dataset_paths, dataset_voc2012, dataset_cifar
 import dataset
-dataset_paths, dataset_voc2012, dataset_cifar
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+import tensorflow as tf
 
 tf.flags.DEFINE_string('logdir', None, 'Log directory')
 tf.flags.DEFINE_integer("batch_size", 32, "Batch size")
 tf.flags.DEFINE_float("learning_rate", .005, "Learning rate")
-tf.flags.DEFINE_string("dataset", 'dataset_voc2012', "Dataset to use")
+tf.flags.DEFINE_string("dataset", 'dataset_voc2012_rec', "Dataset to use")
 tf.flags.DEFINE_string('image', None, 'Image with watermark')
 tf.flags.DEFINE_string('selection', None, 'Where to do the removal')
 
@@ -179,20 +179,20 @@ def inference(sess, dataset, passes=1,
 
 def train(sess, dataset, min_opacity=.15, max_opacity=.4):
     global_step = tf.Variable(0, name='global_step', trainable=False)
+    training = tf.placeholder(tf.bool, shape=[])
     with tf.device('/cpu:0'):
-        next_image, iterator_init = dataset()
+        next_image, iterator_inits = dataset_split(dataset, .8)
 
     masks = batch_masks(
         global_step, next_image.shape.as_list()[1], next_image.shape.as_list()[2],
         min_opacity, max_opacity)
     image_w = tf.clip_by_value(next_image - masks, 0, 1)
-    predictions = model(image_w, True) * selection_margin(masks, 4)
+    predictions = model(image_w, training) * selection_margin(masks, 4)
     tf.summary.image('masks', predictions)
 
     # Define loss
     image_mask = -(image_w - next_image)  # Mask after application on the image
-    abs_loss = tf.losses.absolute_difference(predictions, image_mask)**.5
-    tf.losses.add_loss(abs_loss)
+    tf.losses.absolute_difference(predictions, image_mask)**.5
     loss = tf.losses.get_total_loss(True)
     tf.summary.scalar('loss', loss)
 
@@ -208,28 +208,39 @@ def train(sess, dataset, min_opacity=.15, max_opacity=.4):
 
     # Training loop
     sess.run(tf.global_variables_initializer())
-    iterator_init(sess)
-    sess.run(tf.tables_initializer())
+    sess.run(iterator_inits[0])
 
     saver = tf.train.Saver()
     summaries = tf.summary.merge_all()
-    train_writer = tf.summary.FileWriter(FLAGS.logdir, sess.graph)
+    train_writer = tf.summary.FileWriter(os.path.join(FLAGS.logdir, 'train'), sess.graph)
+    val_writer = tf.summary.FileWriter(os.path.join(FLAGS.logdir, 'val'), sess.graph)
 
     for i in range(1, 2 if DEBUG else int(1e6)):
-        if not DEBUG:
-            _, summaries_, global_step_ = sess.run(
-                [train_op, summaries, global_step])
-            train_writer.add_summary(summaries_, global_step_)
-
-            # Save model
-            if i % 2000 == 0:
-                path = saver.save(sess, "/tmp/model.ckpt")
-                print(i, 'Saving at', path)
-        else:
+        if DEBUG:
             start_time = time()
-            _, loss_, predictions_ = sess.run([train_op, loss, predictions])
+            _, loss_, predictions_ = sess.run([train_op, loss, predictions],
+                                              feed_dict={training: True})
             batch_time = 1000 * (time() - start_time) / FLAGS.batch_size
             print('Time %dms, Loss %f' % (batch_time, loss_))
+            continue
+
+        _, summaries_, global_step_ = sess.run(
+            [train_op, summaries, global_step], feed_dict={training: True})
+        train_writer.add_summary(summaries_, global_step_)
+
+        # Save model
+        if i % 2000 == 0:
+            path = saver.save(sess, "/tmp/model.ckpt")
+            print(i, 'Saving at', path)
+            sess.run(iterator_inits[1])  # switch to validation dataset
+            while True:
+                try:
+                    _, summaries_ = sess.run([loss, summaries],
+                                             feed_dict={training: False})
+                    val_writer.add_summary(summaries_, global_step_)
+                except tf.errors.OutOfRangeError:
+                    break
+            sess.run(iterator_inits[0])
     return
 
 

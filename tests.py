@@ -25,7 +25,7 @@ class WatermarkTest(tf.test.TestCase):
         w.FLAGS.batch_size = 2
         with self.test_session() as sess:
             np.set_printoptions(threshold=np.nan)
-            x, _ = w.dataset_paths(['data/cat.png'])
+            x, _ = w.dataset_paths(['assets/cat.png'])
             sess.run(tf.tables_initializer())
             self.assertTupleEqual(x.eval().shape, (1, 300, 300, 4))
 
@@ -44,6 +44,13 @@ class WatermarkTest(tf.test.TestCase):
             init(sess)
             self.assertTupleEqual(x.eval().shape, (2, 32, 32, 3))
 
+    def test_dataset_split(self):
+        w.FLAGS.batch_size = 2
+        with self.test_session() as sess:
+            x, iterator_inits = w.dataset_split(w.dataset_voc2012_rec, .8)
+            sess.run(iterator_inits[0])
+            self.assertTupleEqual(x.eval().shape, (2, 120, 120, 3))
+
     def test_dataset_voc2012(self):
         w.FLAGS.batch_size = 2
         with self.test_session() as sess:
@@ -57,7 +64,7 @@ class WatermarkTest(tf.test.TestCase):
 
     def test_training(self):
         with self.test_session() as sess:
-            w.train(sess, w.dataset_voc2012)
+            w.train(sess, w.dataset_voc2012_rec)
 
     def test_inference_voc(self):
         with self.test_session() as sess:
@@ -67,9 +74,11 @@ class WatermarkTest(tf.test.TestCase):
 
     def test_inference_other(self):
         with self.test_session() as sess:
-            d_cherry = lambda: w.dataset_paths(['data/cat.png', ])
-            dm = lambda: w.dataset_paths(['data/cat-mask.png', ])
-            ds = lambda: w.dataset_paths(['data/cat-selection.png', ])
+            def d_cherry(): return w.dataset_paths(['assets/cat.png', ])
+
+            def dm(): return w.dataset_paths(['assets/empty.png', ])
+
+            def ds(): return w.dataset_paths(['assets/cat-selection.png', ])
             results = w.inference(sess, d_cherry, 1, dm, ds)
             self.assertTupleEqual(results[0].shape, (1, 300, 300, 3))
 

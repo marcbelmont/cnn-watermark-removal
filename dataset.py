@@ -58,11 +58,35 @@ def dataset_paths(paths):
     return next_element, lambda _: None
 
 
-def dataset_voc2012():
+def get_records():
     records = glob('data/*.tfrecords')
     if not records:
         convert_to_record()
         records = glob('data/*.tfrecords')
+    return records
+
+
+def dataset_split(dataset_fn, split):
+    records = get_records()
+    split = int(len(records) * split)
+    train, val = dataset_fn(records[:split]), dataset_fn(records[split:])
+    iterator = tf.contrib.data.Iterator.from_structure(
+        train.output_types, train.output_shapes)
+    next_element = iterator.get_next()
+    return (next_element,
+            [iterator.make_initializer(x) for x in [train, val]])
+
+
+def dataset_voc2012():
+    records = get_records()
+    dataset = dataset_voc2012_rec(records)
+    iterator = dataset.make_initializable_iterator()
+    next_element = iterator.get_next()
+    tf.add_to_collection(tf.GraphKeys.TABLE_INITIALIZERS, iterator.initializer)
+    return next_element, lambda x: None
+
+
+def dataset_voc2012_rec(records):
 
     def parse_function(serialized):
         features = tf.parse_single_example(serialized, features=dict(
@@ -90,10 +114,7 @@ def dataset_voc2012():
         lambda batch: tf.equal(tf.shape(batch)[0], FLAGS.batch_size))
     dataset = dataset.shuffle(buffer_size=10000)
     dataset = dataset.repeat()
-    iterator = dataset.make_initializable_iterator()
-    next_element = iterator.get_next()
-    tf.add_to_collection(tf.GraphKeys.TABLE_INITIALIZERS, iterator.initializer)
-    return next_element, lambda x: None
+    return dataset
 
 
 def dataset_cifar():
@@ -140,6 +161,8 @@ def _bytes_feature(value):
 def convert_to_record():
     print('Creating TFRecords')
     filenames = glob('data/VOCdevkit/VOC2012/JPEGImages/*.jpg')
+    if not filenames:
+        print('Source images are missing!')
     writer = None
     for i, filename in enumerate(filenames):
         if i % 200 == 0:
