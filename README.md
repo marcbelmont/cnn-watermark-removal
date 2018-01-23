@@ -10,10 +10,11 @@ Deep learning architecture to remove transparent overlays from images.
 
 ## Design choices
 
-At train time, I generate a mask. It is a rectangle with randomly generated parameters (height, width, opacity, black/white, rotation). The mask is applied to a picture and the network is trained to find what was added. The loss is abs(prediction, image_perturbations)**1/2. The loss is not on the entire picture. An area around the mask is used to make the problem more tractable.
+At train time, I generate a mask. It is a rectangle with randomly generated parameters (height, width, opacity, black/white, rotation). The mask is applied to a picture and the network is trained to find what was added. The loss is abs(prediction, image_perturbations)**1/2. It is not on the entire picture. An area around the mask is used to make the problem more tractable.
 
 The network architecture does not down-sample the image. The prediction with a down-sampling network were not accurate enough. To have a large enough receptive field and not blow up the compute, I use dilated convolution. So concretely, I have a densenet style block, a bunch of dilated convolutions and final convolution to output a picture (3 channels). I did not spend much time doing hyper-parameters optimization. There's room to get better results using the current architecture.
 
+Limitations: this architectures does not generalize to watermarks that are too different from the one generated with `create_mask` and it produces decent results only when the overlay is applied in an additive fashion.
 
 ## Usage
 
