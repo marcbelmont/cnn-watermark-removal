@@ -20,7 +20,7 @@ Limitations: this architectures does not generalize to watermarks that are too d
 
 This project uses Tensorflow. Install packages with`pip install -r requirements.txt`
 
-You will also need to download the pascal dataset from http://host.robots.ox.ac.uk/pascal/VOC/voc2012/ or CIFAR10 python version from https://www.cs.toronto.edu/~kriz/cifar.html
+You will also need to **download the pascal dataset** (used by default) from http://host.robots.ox.ac.uk/pascal/VOC/voc2012/ or CIFAR10 python version from https://www.cs.toronto.edu/~kriz/cifar.html. The project directory should then have the directory `cifar-10-batches-py` and/or `data/VOCdevkit/VOC2012/JPEGImages`.
 
 To train the network `python3 watermarks.py --logdir=save/`. It starts to produce some interesting results after 12000 steps.
 
