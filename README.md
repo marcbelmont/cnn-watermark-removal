@@ -25,3 +25,9 @@ You will also need to **download the pascal dataset** (used by default) from htt
 To train the network `python3 watermarks.py --logdir=save/`. It starts to produce some interesting results after 12000 steps.
 
 To use the network for inference, you can run `python watermarks.py --image assets/cat.png --selection assets/cat-selection.png` this will create a new image `output.png`.
+
+
+## Pretrained weights
+
+Here you can find the weights: https://github.com/marcbelmont/cnn-watermark-removal/files/1594328/data.zip
+put them in /tmp/
