@@ -21,9 +21,9 @@ dataset.FLAGS = FLAGS
 DEBUG = False
 dataset.DEBUG = DEBUG
 
-#########
-# Model #
-#########
+##########
+## Model ##
+##########
 
 
 def dense_block(net, growth_rate, channels_init, layers, training):
