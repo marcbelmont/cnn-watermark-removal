@@ -4,7 +4,7 @@ import os
 import watermarks as w
 from glob import glob
 from datetime import datetime
-
+#congrats sir for hakwithinfy and all the best for naggaro
 w.DEBUG = True
 
 
