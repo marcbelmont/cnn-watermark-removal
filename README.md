@@ -1,4 +1,4 @@
-The architecture used in this project does not generalize well. You may want to check https://dmitryulyanov.github.io/deep_image_prior. This inpainting technique will likely give you better results.
+**Warning!** The architecture used in this project **does not generalize well**. You may want to check **https://dmitryulyanov.github.io/deep_image_prior**. This inpainting technique will likely give you better results.
 
 # Fully convolutional watermark removal attack
 
