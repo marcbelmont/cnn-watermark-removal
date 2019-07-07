@@ -47,7 +47,7 @@ def dataset_paths(paths):
         image = tf.image.resize_image_with_crop_or_pad(image, 300, 300)
         image.set_shape([300, 300, 3])
         return image
-    dataset = tf.contrib.data.Dataset.from_tensor_slices(tf.constant(paths))
+    dataset = tf.Dataset.from_tensor_slices(tf.constant(paths))
     dataset = dataset.map(load_image)
     dataset = dataset.batch(FLAGS.batch_size)
     dataset = dataset.shuffle(buffer_size=5000)
@@ -70,7 +70,7 @@ def dataset_split(dataset_fn, split):
     records = get_records()
     split = int(len(records) * split)
     train, val = dataset_fn(records[:split]), dataset_fn(records[split:])
-    iterator = tf.contrib.data.Iterator.from_structure(
+    iterator = tf.data.Iterator.from_structure(
         train.output_types, train.output_shapes)
     next_element = iterator.get_next()
     return (next_element,
@@ -107,7 +107,7 @@ def dataset_voc2012_rec(records):
         image = tf.image.random_flip_left_right(image)
         return image
 
-    dataset = tf.contrib.data.TFRecordDataset(records)
+    dataset = tf.data.TFRecordDataset(records)
     dataset = dataset.map(parse_function)
     dataset = dataset.batch(FLAGS.batch_size)
     dataset = dataset.filter(
@@ -120,7 +120,7 @@ def dataset_voc2012_rec(records):
 def dataset_cifar():
     images = standardize(get_images())
     images_placeholder = tf.placeholder(tf.float32, images.shape)
-    dataset = tf.contrib.data.Dataset.from_tensor_slices(images_placeholder)
+    dataset = tf.data.Dataset.from_tensor_slices(images_placeholder)
     dataset = dataset.map(tf.image.random_flip_left_right)
     dataset = dataset.batch(FLAGS.batch_size)
     dataset = dataset.filter(
