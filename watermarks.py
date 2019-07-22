@@ -142,8 +142,11 @@ def inference(sess, dataset, passes=1,
     sess.run(tf.tables_initializer())
     iterator_init(sess)
 
-    saver = tf.train.Saver()
-    saver.restore(sess, "/tmp/model.ckpt")
+    try:
+        saver = tf.train.Saver()
+        saver.restore(sess, "/tmp/model.ckpt")
+    except Exception as e:
+        print('An error occurred when trying to restore : %s' % e)
 
     # Pass 1
     batch = sess.run([next_image, next_mask])
