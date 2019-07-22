@@ -27,14 +27,6 @@ dataset.DEBUG = DEBUG
 
 
 def dense_block(net, growth_rate, channels_init, layers, training):
-    """
-    :param net:
-    :param growth_rate:
-    :param channels_init:
-    :param layers:
-    :param training:
-    :return:
-    """
     # Dense block https://github.com/liuzhuang13/DenseNet/blob/master/models/DenseConnectLayer.lua
     # Receptive field: l * (k - 1) + k
     for i, channels in enumerate(
@@ -64,11 +56,6 @@ def dense_block(net, growth_rate, channels_init, layers, training):
 
 
 def selection_margin(masks, margin):
-    """
-    :param masks:
-    :param margin:
-    :return:
-    """
     selection = tf.nn.conv2d(masks, tf.ones([
         margin * 2 + 1, margin * 2 + 1, 1, 1]), [1, 1, 1, 1], 'SAME')
     selection = tf.clip_by_value(tf.abs(tf.ceil(selection)), 0, 1)
@@ -76,13 +63,6 @@ def selection_margin(masks, margin):
 
 
 def atrous_conv2d(inputs, filters, kernel_size, rate):
-    """
-    :param inputs:
-    :param filters:
-    :param kernel_size:
-    :param rate:
-    :return:
-    """
     shape = [kernel_size, kernel_size, inputs.shape.as_list()[-1], filters]
     initializer = tf.contrib.layers.xavier_initializer()
     weight = tf.Variable(initializer(shape))
@@ -91,11 +71,6 @@ def atrous_conv2d(inputs, filters, kernel_size, rate):
 
 
 def model(images, training):
-    """
-    :param images:
-    :param training:
-    :return:
-    """
     growth_rate = 16
     channels_init = growth_rate * 2
     bottleneck_channels = 32
@@ -138,16 +113,6 @@ def model(images, training):
 def inference(sess, dataset, passes=1,
               dataset_mask=False, dataset_selection=False,
               min_opacity=.15, max_opacity=.4):
-    """
-    :param sess:
-    :param dataset:
-    :param passes:
-    :param dataset_mask:
-    :param dataset_selection:
-    :param min_opacity:
-    :param max_opacity:
-    :return:
-    """
     # Data sources
     next_image, iterator_init = dataset()
     image_shape = next_image.shape.as_list()
@@ -216,13 +181,6 @@ def inference(sess, dataset, passes=1,
 
 
 def train(sess, dataset, min_opacity=.15, max_opacity=.4):
-    """
-    :param sess:
-    :param dataset:
-    :param min_opacity:
-    :param max_opacity:
-    :return:
-    """
     global_step = tf.Variable(0, name='global_step', trainable=False)
     training = tf.placeholder(tf.bool, shape=[])
     with tf.device('/cpu:0'):
@@ -296,21 +254,11 @@ def train(sess, dataset, min_opacity=.15, max_opacity=.4):
 ###########
 
 def get_accuracy(prediction, target):
-    """
-    :param prediction:
-    :param target:
-    :return:
-    """
     diff = tf.reduce_mean(tf.abs(prediction - target) / 255, [1, 2, 3])
     return (1 - tf.reduce_mean(diff))
 
 
 def show_array(a, fmt='png'):
-    """
-    :param a:
-    :param fmt:
-    :return:
-    """
     a = np.uint8(a)
     f = BytesIO()
     PIL.Image.fromarray(a).save(f, fmt)
@@ -318,10 +266,6 @@ def show_array(a, fmt='png'):
 
 
 def show_images(images):
-    """
-    :param images:
-    :return:
-    """
     for i in range(images.shape[0]):
         if images.shape[1] <= 32:
             plt.figure()
